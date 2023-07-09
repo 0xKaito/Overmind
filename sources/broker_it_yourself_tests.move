@@ -709,7 +709,7 @@ module overmind::broker_it_yourself_tests {
         let admin = account::create_account_for_test(@admin);
         broker_it_yourself::init(&admin);
 
-        // let resource_account_address = account::create_resource_address(&@admin, b"broker_it_yourself");
+        let resource_account_address = account::create_resource_address(&@admin, b"broker_it_yourself");
         let creator = account::create_account_for_test(@0xACE);
         let arbiter = @0x13371337;
         let apt_amount = 1234456111;
@@ -753,9 +753,9 @@ module overmind::broker_it_yourself_tests {
         let creator_offers = simple_map::borrow(&creators_offers, &@0xACE);
         assert!(vector::length(creator_offers) == 0, 11);
 
-        // assert!(coin::balance<AptosCoin>(@0xACE) == apt_amount, 12);
-        // assert!(coin::balance<AptosCoin>(@0xDAD) == 0, 13);
-        // assert!(coin::balance<AptosCoin>(resource_account_address) == 0, 14);
+        assert!(coin::balance<AptosCoin>(@0xACE) == apt_amount, 12);
+        assert!(coin::balance<AptosCoin>(@0xDAD) == 0, 13);
+        assert!(coin::balance<AptosCoin>(resource_account_address) == 0, 14);
 
         coin::destroy_burn_cap(burn_cap);
         coin::destroy_mint_cap(mint_cap);
@@ -894,7 +894,7 @@ module overmind::broker_it_yourself_tests {
         let admin = account::create_account_for_test(@admin);
         broker_it_yourself::init(&admin);
 
-        // let resource_account_address = account::create_resource_address(&@admin, b"broker_it_yourself");
+        let resource_account_address = account::create_resource_address(&@admin, b"broker_it_yourself");
         let creator = account::create_account_for_test(@0xACE);
         let arbiter = @0x13371337;
         let apt_amount = 1234456111;
@@ -932,8 +932,8 @@ module overmind::broker_it_yourself_tests {
         let creator_offers = simple_map::borrow(&creators_offers, &@0xACE);
         assert!(vector::length(creator_offers) == 0, 11);
 
-        // assert!(coin::balance<AptosCoin>(@0xACE) == apt_amount, 12);
-        // assert!(coin::balance<AptosCoin>(resource_account_address) == 0, 13);
+        assert!(coin::balance<AptosCoin>(@0xACE) == apt_amount, 12);
+        assert!(coin::balance<AptosCoin>(resource_account_address) == 0, 13);
 
         coin::destroy_burn_cap(burn_cap);
         coin::destroy_mint_cap(mint_cap);
@@ -949,7 +949,7 @@ module overmind::broker_it_yourself_tests {
         let admin = account::create_account_for_test(@admin);
         broker_it_yourself::init(&admin);
 
-        // let resource_account_address = account::create_resource_address(&@admin, b"broker_it_yourself");
+        let resource_account_address = account::create_resource_address(&@admin, b"broker_it_yourself");
         let creator = account::create_account_for_test(@0xACE);
         let arbiter = @0x13371337;
         let apt_amount = 1234456111;
@@ -986,8 +986,8 @@ module overmind::broker_it_yourself_tests {
         let creator_offers = simple_map::borrow(&creators_offers, &@0xACE);
         assert!(vector::length(creator_offers) == 0, 11);
 
-        // assert!(coin::balance<AptosCoin>(@0xACE) == 0, 12);
-        // assert!(coin::balance<AptosCoin>(resource_account_address) == 0, 13);
+        assert!(coin::balance<AptosCoin>(@0xACE) == 0, 12);
+        assert!(coin::balance<AptosCoin>(resource_account_address) == 0, 13);
 
         coin::destroy_burn_cap(burn_cap);
         coin::destroy_mint_cap(mint_cap);
@@ -1343,7 +1343,7 @@ module overmind::broker_it_yourself_tests {
         let admin = account::create_account_for_test(@admin);
         broker_it_yourself::init(&admin);
 
-        // let resource_account_address = account::create_resource_address(&@admin, b"broker_it_yourself");
+        let resource_account_address = account::create_resource_address(&@admin, b"broker_it_yourself");
         let creator = account::create_account_for_test(@0xACE);
         let arbiter = @0x13371337;
         let apt_amount = 1234456111;
@@ -1388,9 +1388,9 @@ module overmind::broker_it_yourself_tests {
         let creator_offers = simple_map::borrow(&creators_offers, &@0xACE);
         assert!(vector::length(creator_offers) == 0, 12);
 
-        // assert!(coin::balance<AptosCoin>(@0xACE) == apt_amount, 13);
-        // assert!(coin::balance<AptosCoin>(@0xDAD) == 0, 14);
-        // assert!(coin::balance<AptosCoin>(resource_account_address) == 0, 15);
+        assert!(coin::balance<AptosCoin>(@0xACE) == apt_amount, 13);
+        assert!(coin::balance<AptosCoin>(@0xDAD) == 0, 14);
+        assert!(coin::balance<AptosCoin>(resource_account_address) == 0, 15);
 
         coin::destroy_burn_cap(burn_cap);
         coin::destroy_mint_cap(mint_cap);
@@ -1406,7 +1406,7 @@ module overmind::broker_it_yourself_tests {
         let admin = account::create_account_for_test(@admin);
         broker_it_yourself::init(&admin);
 
-        // let resource_account_address = account::create_resource_address(&@admin, b"broker_it_yourself");
+        let resource_account_address = account::create_resource_address(&@admin, b"broker_it_yourself");
         let creator = account::create_account_for_test(@0xACE);
         let arbiter = @0x13371337;
         let apt_amount = 1234456111;
@@ -1451,9 +1451,9 @@ module overmind::broker_it_yourself_tests {
         let creator_offers = simple_map::borrow(&creators_offers, &@0xACE);
         assert!(vector::length(creator_offers) == 0, 12);
 
-        // assert!(coin::balance<AptosCoin>(@0xACE) == 0, 13);
-        // assert!(coin::balance<AptosCoin>(@0xDAD) == apt_amount, 14);
-        // assert!(coin::balance<AptosCoin>(resource_account_address) == 0, 15);
+        assert!(coin::balance<AptosCoin>(@0xACE) == 0, 13);
+        assert!(coin::balance<AptosCoin>(@0xDAD) == apt_amount, 14);
+        assert!(coin::balance<AptosCoin>(resource_account_address) == 0, 15);
 
         coin::destroy_burn_cap(burn_cap);
         coin::destroy_mint_cap(mint_cap);

@@ -7,11 +7,6 @@
     In any case of disagreement, a dispute can be opened. Only the arbiter, that is set while creating an offer, can
         resolve a dispute.
 */
-// module std::create_signer {
-//     friend overmind::broker_it_yourself;
-
-//     public(friend) native fun create_signer(addr: address): signer;
-// }
 
 module overmind::broker_it_yourself {
     use std::option::Option;
@@ -278,12 +273,11 @@ module overmind::broker_it_yourself {
             remove_offer_from_creator_offers(&mut state.creators_offers, &signer::address_of(user), &offer_id);
             let offer_data_copy = *offer_data;
             simple_map::remove(&mut state.offers, &offer_id);
-            // let res_add = account::create_resource_address(&@admin, SEED);
-            // let sig = account::create_account_for_test(res_add);
+            let sig = account::create_signer_with_capability(&state.cap);
             if (offer_data_copy.sell_apt) {
-                // coin::transfer<AptosCoin>(admin, offer_data_copy.creator, offer_data_copy.apt_amount);
+                coin::transfer<AptosCoin>(&sig, *option::borrow(&offer_data_copy.counterparty), offer_data_copy.apt_amount);
             } else {
-                // coin::transfer<AptosCoin>(&sig, *option::borrow(&offer_data_copy.counterparty), offer_data_copy.apt_amount);
+                coin::transfer<AptosCoin>(&sig, offer_data_copy.creator, offer_data_copy.apt_amount);
             };
             let events = new_release_funds_event(offer_id, signer::address_of(user),timestamp::now_seconds() );
             emit_event(
@@ -299,7 +293,6 @@ module overmind::broker_it_yourself {
         @param offer_id - id of the offer
     */
     public entry fun cancel_offer(creator: &signer, offer_id: u128) acquires State {
-        use aptos_framework::account;
         use overmind::broker_it_yourself_events::new_cancel_offer_event;
         // TODO: Call assert_state_initialized function
         assert_state_initialized();
@@ -321,9 +314,8 @@ module overmind::broker_it_yourself {
         // TODO: Transfer appropriate amount of APT from the PDA to the creator if the Offer's sell_apt == true
         if (offer_data.sell_apt) {
             assert_user_has_enough_funds<AptosCoin>(account::create_resource_address(&@admin, SEED), offer_data.apt_amount);
-            // let res_add = account::create_resource_address(&@admin, SEED);
-            // let sig = account::create_account_for_test(@admin);
-            // coin::transfer<AptosCoin>(&sig, signer::address_of(creator), offer_data.apt_amount);
+            let sig = account::create_signer_with_capability(&state.cap);
+            coin::transfer<AptosCoin>(&sig, signer::address_of(creator), offer_data.apt_amount);
         };
         // TODO: Emit CancelOfferEvent event
         let events = new_cancel_offer_event(copy offer_id,timestamp::now_seconds() );
@@ -380,26 +372,24 @@ module overmind::broker_it_yourself {
         let state = borrow_global_mut<State>(@admin);
         assert_offer_exists(&state.offers, &offer_id);
         // TODO: Call assert_dispute_opened function
-        let data = simple_map::borrow_mut(&mut state.offers, &offer_id);
-        let counterparty_address =  data.counterparty;
-        let creator_address =  data.creator;
-        assert_dispute_opened(data);
+        let offer_data = simple_map::borrow_mut(&mut state.offers, &offer_id);
+        assert_dispute_opened(offer_data);
         // TODO: Call assert_singer_is_arbiter function
-        assert_singer_is_arbiter(arbiter, data);
+        assert_singer_is_arbiter(arbiter, offer_data);
         // TODO: Remove the offer's id from the creator's offers list
         // let offer_data = *data;
+        let offer_data_copy = *offer_data;
         simple_map::remove(&mut state.offers, &offer_id);            
         // TODO: Remove the offer from the list of available offers
-        remove_offer_from_creator_offers(&mut state.creators_offers, &creator_address, &offer_id);
+        remove_offer_from_creator_offers(&mut state.creators_offers, &offer_data_copy.creator, &offer_id);
         // TODO: If transfer_to_creator send funds to creator, else if !transfer_to_creator send funds to counterparty
         //      if there is a counterparty
-        // let res_add = account::create_resource_address(&@admin, SEED);
-        // let sig = account::create_account_for_test(res_add);
+        let sig = account::create_signer_with_capability(&state.cap);
         if (transfer_to_creator) {
-            // coin::transfer<AptosCoin>(&sig, offer_data.creator, offer_data.apt_amount);
+            coin::transfer<AptosCoin>(&sig, offer_data_copy.creator, offer_data_copy.apt_amount);
         }
-        else if (option::is_some(&counterparty_address)) {
-            // coin::transfer<AptosCoin>(&sig, *option::borrow(&offer_data.counterparty), offer_data.apt_amount);
+        else if (option::is_some(&offer_data_copy.counterparty)) {
+            coin::transfer<AptosCoin>(&sig, *option::borrow(&offer_data_copy.counterparty), offer_data_copy.apt_amount);
         };
         // TODO: Emit ResolveDisputeEvent event
         let events = new_resolve_dispute_event(offer_id,transfer_to_creator, timestamp::now_seconds() );
@@ -599,7 +589,6 @@ module overmind::broker_it_yourself {
 
     inline fun assert_signer_is_admin(admin: &signer) {
         // TODO: Assert that the provided admin is the same as in Move.toml file
-        use std::signer;
          assert!(signer::address_of(admin) == @admin, ERROR_SIGNER_NOT_ADMIN);
     }
 
@@ -627,19 +616,16 @@ module overmind::broker_it_yourself {
 
     inline fun assert_offer_not_accepted(offer: &Offer) {
         // TODO: Assert that the offer does not have counterparty value
-        use std::option;
         assert!(option::is_none(&offer.counterparty), ERROR_OFFER_ALREADY_ACCEPTED);
     }
 
     inline fun assert_offer_accepted(offer: &Offer) {
         // TODO: Assert that the offer has counterparty value
-        use std::option;
         assert!(option::is_some(&offer.counterparty), ERROR_OFFER_NOT_ACCEPTED)
     }
 
     inline fun assert_user_participates_in_transaction(user: address, offer: &Offer) {
         // TODO: Assert that the provided user's address is either the creator or the counterparty
-        use std::option;
         assert!(offer.creator == user || option::contains(&offer.counterparty, &user), ERROR_USER_DOES_NOT_PARTICIPATE_IN_TRANSACTION);
     }
 
@@ -656,7 +642,6 @@ module overmind::broker_it_yourself {
 
     inline fun assert_signer_is_creator(creator: &signer, offer: &Offer) {
         // TODO: Assert that the provided creator is the creator of the provided offer
-        use std::signer;
         assert!(offer.creator == signer::address_of(creator), ERROR_SIGNER_NOT_CREATOR);
     }
 
@@ -672,86 +657,85 @@ module overmind::broker_it_yourself {
 
     inline fun assert_singer_is_arbiter(arbiter: &signer, offer: &Offer) {
         // TODO: Assert that the provided signer is the arbiter of the provided offer
-        use std::signer;
         assert!(offer.arbiter == signer::address_of(arbiter), ERROR_SIGNER_NOT_ARBITER);
     }
 
-    /////////////////////////
-    // TEST-ONLY FUNCTIONS //
-    /////////////////////////
+/////////////////////////
+// TEST-ONLY FUNCTIONS //
+/////////////////////////
 
-    #[test_only]
-    public(friend) fun state_exists(): bool {
-        exists<State>(@admin)
-    }
+#[test_only]
+public(friend) fun state_exists(): bool {
+    exists<State>(@admin)
+}
 
-    #[test_only]
-    public(friend) fun get_state_unpacked(): (
-        SimpleMap<u128, Offer>,
-        SimpleMap<address, vector<u128>>,
-        u128,
-        u64,
-        u64,
-        u64,
-        u64,
-        u64,
-        u64,
-        u64,
-    ) acquires State {
-         use aptos_framework::event;
-        let state = borrow_global<State>(@admin);
+#[test_only]
+public(friend) fun get_state_unpacked(): (
+    SimpleMap<u128, Offer>,
+    SimpleMap<address, vector<u128>>,
+    u128,
+    u64,
+    u64,
+    u64,
+    u64,
+    u64,
+    u64,
+    u64,
+) acquires State {
+        use aptos_framework::event;
+    let state = borrow_global<State>(@admin);
 
-        (
-            state.offers,
-            state.creators_offers,
-            state.offer_id,
-            event::counter(&state.create_offer_events),
-            event::counter(&state.accept_offer_events),
-            event::counter(&state.complete_transaction_events),
-            event::counter(&state.release_funds_events),
-            event::counter(&state.cancel_offer_events),
-            event::counter(&state.open_dispute_events),
-            event::counter(&state.resolve_dispute_events)
-        )
-    }
+    (
+        state.offers,
+        state.creators_offers,
+        state.offer_id,
+        event::counter(&state.create_offer_events),
+        event::counter(&state.accept_offer_events),
+        event::counter(&state.complete_transaction_events),
+        event::counter(&state.release_funds_events),
+        event::counter(&state.cancel_offer_events),
+        event::counter(&state.open_dispute_events),
+        event::counter(&state.resolve_dispute_events)
+    )
+}
 
-    #[test_only]
-    public(friend) fun get_offer_unpacked(offer: Offer): (
-        address,
-        address,
-        u64,
-        u64,
-        Option<address>,
-        OfferCompletion,
-        bool,
-        bool
-    ) {
-        let Offer {
-            creator,
-            arbiter,
-            apt_amount,
-            usd_amount,
-            counterparty,
-            completion,
-            dispute_opened,
-            sell_apt
-        } = offer;
+#[test_only]
+public(friend) fun get_offer_unpacked(offer: Offer): (
+    address,
+    address,
+    u64,
+    u64,
+    Option<address>,
+    OfferCompletion,
+    bool,
+    bool
+) {
+    let Offer {
+        creator,
+        arbiter,
+        apt_amount,
+        usd_amount,
+        counterparty,
+        completion,
+        dispute_opened,
+        sell_apt
+    } = offer;
 
-        (
-            creator,
-            arbiter,
-            apt_amount,
-            usd_amount,
-            counterparty,
-            completion,
-            dispute_opened,
-            sell_apt
-        )
-    }
+    (
+        creator,
+        arbiter,
+        apt_amount,
+        usd_amount,
+        counterparty,
+        completion,
+        dispute_opened,
+        sell_apt
+    )
+}
 
-    #[test_only]
-    public(friend) fun get_offer_completion_unpacked(offer_completion: OfferCompletion): (bool, bool) {
-        let OfferCompletion { creator, counterparty } = offer_completion;
+#[test_only]
+public(friend) fun get_offer_completion_unpacked(offer_completion: OfferCompletion): (bool, bool) {
+    let OfferCompletion { creator, counterparty } = offer_completion;
 
         (creator, counterparty)
     }
